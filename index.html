@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Gateway</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --success: #00b894;
+            --info: #0984e3;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+            --dana: #00AEEF;
+            --gopay: #00AA13;
+            --ovo: #4C2A86;
+            --qris: #FF6B00;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px;
+            transition: all 0.3s ease;
+        }
+        
+        .container:hover {
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+        }
+        
+        .header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .payment-methods {
+            padding: 25px;
+        }
+        
+        .payment-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        
+        .payment-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--dark);
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tab i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        .tab[data-tab="qris"] i { color: var(--qris); }
+        .tab[data-tab="dana"] i { color: var(--dana); }
+        .tab[data-tab="gopay"] i { color: var(--gopay); }
+        .tab[data-tab="ovo"] i { color: var(--ovo); }
+        
+        .tab.active {
+            opacity: 1;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .tab:hover:not(.active) {
+            opacity: 0.9;
+        }
+        
+        .payment-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .payment-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .payment-option {
+            margin-bottom: 25px;
+        }
+        
+        .payment-option h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+        }
+        
+        .payment-option h3 i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        #qris-content h3 i { color: var(--qris); }
+        #dana-content h3 i { color: var(--dana); }
+        #gopay-content h3 i { color: var(--gopay); }
+        #ovo-content h3 i { color: var(--ovo); }
+        
+        .qr-container {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .qr-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .qr-container img:hover {
+            transform: scale(1.03);
+        }
+        
+        .payment-number {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .payment-number:hover {
+            background-color: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .payment-number .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 18px;
+        }
+        
+        #dana-content .icon { background-color: var(--dana); }
+        #gopay-content .icon { background-color: var(--gopay); }
+        #ovo-content .icon { background-color: var(--ovo); }
+        
+        .payment-number .info {
+            flex: 1;
+        }
+        
+        .payment-number .info p {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+        
+        .payment-number .info h4 {
+            font-size: 16px;
+            color: var(--dark);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .payment-number .info .an {
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+        }
+        
+        .copy-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .copy-btn i {
+            margin-right: 5px;
+        }
+        
+        .copy-btn:hover {
+            background-color: var(--secondary);
+        }
+        
+        .instructions {
+            font-size: 13px;
+            color: #6c757d;
+            line-height: 1.6;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .confirmation-note {
+            background-color: #fff8e1;
+            color: #ff6f00;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .confirmation-note i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: #6c757d;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .payment-methods {
+                padding: 15px;
+            }
+            
+            .tab {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Payment Gateway</h1>
+            <p>Choose your preferred payment method</p>
+        </div>
+        
+        <div class="payment-methods">
+            <div class="payment-tabs">
+                <div class="tab active" data-tab="qris">
+                    <i class="fas fa-qrcode"></i> QRIS
+                </div>
+                <div class="tab" data-tab="dana">
+                    <i class="fab fa-dyalog"></i> DANA
+                </div>
+                <div class="tab" data-tab="gopay">
+                    <i class="fas fa-wallet"></i> Gopay
+                </div>
+                <div class="tab" data-tab="ovo">
+                    <i class="fas fa-mobile-alt"></i> OVO
+                </div>
+            </div>
+            
+            <div class="payment-content active" id="qris-content">
+                <div class="payment-option">
+                    <h3><i class="fas fa-qrcode"></i> QRIS Payment</h3>
+                    <div class="qr-container">
+                        <img src="https://ik.imagekit.io/ig4f2kmgb/Screenshot_20250309-214403_1.jpg" alt="QRIS Code">
+                    </div>
+                    <div class="instructions">
+                        <p><strong>How to pay:</strong></p>
+                        <ol>
+                            <li>Open your mobile banking or e-wallet app</li>
+                            <li>Select QRIS payment option</li>
+                            <li>Scan the QR code above</li>
+                            <li>Enter the payment amount</li>
+                            <li>Confirm the payment</li>
+                        </ol>
+                    </div>
+                    <div class="confirmation-note">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Jika sudah transfer, kirim bukti transfer ke admin ya 👋</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="payment-content" id="dana-content">
+                <div class="payment-option">
+                    <h3><i class="fab fa-dyalog"></i> DANA Payment</h3>
+                    <div class="payment-number">
+                        <div class="icon">
+                            <i class="fab fa-dyalog"></i>
+                        </div>
+                        <div class="info">
+                            <p>DANA Number</p>
+                            <h4>085123598381</h4>
+                            <p class="an">A/N: SULKAH</p>
+                        </div>
+                        <button class="copy-btn" data-number="085123598381">
+                            <i class="far fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div class="instructions">
+                        <p><strong>How to pay:</strong></p>
+                        <ol>
+                            <li>Open your DANA app</li>
+                            <li>Go to "Send Money" or "Transfer"</li>
+                            <li>Enter the DANA number above</li>
+                            <li>Enter the payment amount</li>
+                            <li>Confirm the payment</li>
+                        </ol>
+                    </div>
+                    <div class="confirmation-note">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Jika sudah transfer, kirim bukti transfer ke admin ya 👋</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="payment-content" id="gopay-content">
+                <div class="payment-option">
+                    <h3><i class="fas fa-wallet"></i> Gopay Payment</h3>
+                    <div class="payment-number">
+                        <div class="icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="info">
+                            <p>Gopay Number</p>
+                            <h4>085123598381</h4>
+                            <p class="an">A/N: SRI HARDJONO</p>
+                        </div>
+                        <button class="copy-btn" data-number="085123598381">
+                            <i class="far fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div class="instructions">
+                        <p><strong>How to pay:</strong></p>
+                        <ol>
+                            <li>Open your Gojek app</li>
+                            <li>Go to Gopay section</li>
+                            <li>Select "Transfer" or "Send Money"</li>
+                            <li>Enter the Gopay number above</li>
+                            <li>Enter the payment amount and confirm</li>
+                        </ol>
+                    </div>
+                    <div class="confirmation-note">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Jika sudah transfer, kirim bukti transfer ke admin ya 👋</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="payment-content" id="ovo-content">
+                <div class="payment-option">
+                    <h3><i class="fas fa-mobile-alt"></i> OVO Payment</h3>
+                    <div class="payment-number">
+                        <div class="icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="info">
+                            <p>OVO Number</p>
+                            <h4>085123598381</h4>
+                            <p class="an">A/N: DANI RUDIAWAN</p>
+                        </div>
+                        <button class="copy-btn" data-number="085123598381">
+                            <i class="far fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div class="instructions">
+                        <p><strong>How to pay:</strong></p>
+                        <ol>
+                            <li>Open your OVO app</li>
+                            <li>Go to "Transfer" section</li>
+                            <li>Select "To OVO User"</li>
+                            <li>Enter the OVO number above</li>
+                            <li>Enter the payment amount and confirm</li>
+                        </ol>
+                    </div>
+                    <div class="confirmation-note">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Jika sudah transfer, kirim bukti transfer ke admin ya 👋</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>After making payment, please confirm via WhatsApp or our contact center</p>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        const tabs = document.querySelectorAll('.tab');
+        const contents = document.querySelectorAll('.payment-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                contents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(`${tabId}-content`).classList.add('active');
+            });
+        });
+        
+        // Copy button functionality
+        const copyButtons = document.querySelectorAll('.copy-btn');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const number = button.getAttribute('data-number');
+                navigator.clipboard.writeText(number).then(() => {
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                    }, 2000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
